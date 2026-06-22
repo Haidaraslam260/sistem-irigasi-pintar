@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect, useCallback } from "react"
-import mqtt, { type MqttClient } from "mqtt"
+import mqtt, { type IClientOptions, type MqttClient } from "mqtt"
 import { ThemeToggle } from "./theme-toggle"
 import { Droplets, Wifi, WifiOff, Power, PowerOff, Settings, Activity } from "lucide-react"
 import { MoistureChart } from "./moisture-chart"
@@ -32,9 +32,15 @@ const SoilMoistureGauge: React.FC<{ value: number }> = ({ value }) => {
   const strokeDashoffset = circumference - (value / 100) * circumference
 
   const getColor = (value: number) => {
-    if (value < 30) return "#ef4444" // red
-    if (value < 60) return "#f59e0b" // amber
-    return "#10b981" // green
+    if (value <= 25) return "#ef4444" // kering
+    if (value <= 40) return "#f59e0b" // lembap
+    return "#10b981" // basah
+  }
+
+  const getStatus = (value: number) => {
+    if (value <= 25) return "Kering"
+    if (value <= 40) return "Lembap"
+    return "Basah"
   }
 
   return (
@@ -70,7 +76,7 @@ const SoilMoistureGauge: React.FC<{ value: number }> = ({ value }) => {
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <Droplets className="h-8 w-8 mb-2 text-blue-500" />
           <span className="text-3xl font-bold text-gray-900 dark:text-white">{value}%</span>
-          <span className="text-sm text-gray-500 dark:text-gray-400">Kelembapan</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">{getStatus(value)}</span>
         </div>
       </div>
     </div>
@@ -129,7 +135,7 @@ export default function Dashboard() {
     let isActive = true
     const url = `wss://${MQTT_BROKER_HOST}:${MQTT_WS_PORT}/mqtt`;
 
-    const options = {
+    const options: IClientOptions = {
       clientId: `iot_dashboard_${Math.random().toString(16).substr(2, 8)}`,
       username: MQTT_USERNAME,
       password: MQTT_PASSWORD,
@@ -297,7 +303,7 @@ export default function Dashboard() {
                   <SoilMoistureGauge value={soilMoisture} />
                   <div className="mt-6">
                     <div className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                      <span>Nilai optimal: 60-80%</span>
+                      <span>Kering 0-25% | Lembap 26-40% |  Basah40-100%</span>
                     </div>
                   </div>
                 </div>
